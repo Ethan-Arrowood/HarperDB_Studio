@@ -1,5 +1,5 @@
 {
-  "default_host":"localhost",
+  "default_host":"http://localhost",
   "default_port":9925,
   "http_port":8080,
   "logging_level":"error"

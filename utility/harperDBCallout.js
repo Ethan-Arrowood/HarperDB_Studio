@@ -1,66 +1,35 @@
-const http = require('http');
+const { HarperDBConnect } = require('harperdb-connect');
 
+function callHarperDB(call_object, operation, callback){
+    const db = new HarperDBConnect();
+    
+    db.setAuthorization(call_object.username, call_object.password)
 
-function callHarperDB(call_object,operation,  callback){
+    const regex = /^(https?:\/\/)/gm;
+    const {endpoint_url, endpoint_port} = call_object;
+    const url = regex.test(endpoint_url) ? (
+        `${endpoint_url}:${endpoint_port}`
+    ) : (
+        `http://${endpoint_url}:${endpoint_port}`
+    )
 
+    db.connect(url)
+        .then(() => console.log('Connected!'))
+        .catch(err => callback(`Failed to connect to ${url}`, null))
 
-    var options = {
+    db.setDefaultOptions({
         "method": "POST",
-        "hostname": call_object.endpoint_url,
-        "port": call_object.endpoint_port,
-        "path": "/",
         "headers": {
             "content-type": "application/json",
-            "authorization": "Basic " + new Buffer(call_object.username + ':' + call_object.password).toString('base64'),
             "cache-control": "no-cache"
-        }
-    };
-
-
-    var http_req = http.request(options, function (hdb_res) {
-        var chunks = [];
-
-
-        hdb_res.on("data", function (chunk) {
-            chunks.push(chunk);
-        });
-
-        hdb_res.on("end", function () {
-            var body = Buffer.concat(chunks);
-            if (isJson(body)) {
-               return callback(null, JSON.parse(body));
-            } else {
-               return callback(body, null);
-
-            }
-
-        });
-
-
+        },
+        json: true
     });
-
-
-    http_req.on("error", function (chunk) {
-        return callback("Failed to connect", null);
-    });
-
-
-    http_req.write(JSON.stringify(operation));
-    http_req.end();
-
+    db.request(operation, true)
+        .then(res => callback(null, res))
+        .catch(err => callback(err, null))
 }
 
-
-function isJson(s) {
-    try {
-        JSON.parse(s);
-        return true;
-    } catch (e) {
-        return false;
-    }
-};
-
-module.exports ={
-
+module.exports = {
     callHarperDB: callHarperDB
 }
