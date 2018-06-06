@@ -9,6 +9,7 @@ const express = require('express'),
     LocalStrategy = require('passport-local').Strategy,
     session = require('express-session'),
     hdb_callout = require('./utility/harperDBCallout'),
+    HarperDBConnect = require('harperdb-connect'),
     http = require('http'),
     https = require('https'),
     fs = require('fs');
@@ -68,46 +69,48 @@ passport.use(new LocalStrategy({
     passReqToCallback: true
 },
     function (req, username, password, done) {
-        var call_object = {
-            username: username,
-            password: password,
-            endpoint_url: req.body.endpoint_url,
-            endpoint_port: req.body.endpoint_port
+        var db = new HarperDBConnect(username, password);
 
-        };
-
-        var operation = {
-            operation: 'user_info'
-        };
-        hdb_callout.callHarperDB(call_object, operation, function (err, user) {
-            if (err) {
-                return done(null, false, {
-                    message: err
-                });
+        db.connect(req.body.endpoint_url + ':' + req.body.endpoint_port).then(
+            () => {
+                db.request({
+                    method: 'POST',
+                    url: db.options.url,
+                    headers: {
+                        'content-type': 'application/json',
+                        authorization: db.authorization,
+                        'cache-control': 'no-cache'
+                    },
+                    body: {
+                        operation: 'user_info'
+                    },
+                    json: true,
+                }).then(user => {
+                    
+                    if (user && user.active) {
+                        user.password = password;
+                        user.endpoint_url = req.body.endpoint_url;
+                        user.endpoint_port = req.body.endpoint_port;
+                        return done(null, user);
+                    } else if (user) {
+                        return done(null, false, {
+                            message: JSON.stringify(user)
+                        });
+                    } else {
+                        return done(null, false, {
+                            message: 'Invalid credentials'
+                        });
+                    }
+                }).catch(err => {
+                    return done(null, false, {
+                        message: err
+                    });
+                })
             }
-
-            if (user && user.active) {
-                user.password = password;
-                user.endpoint_url = req.body.endpoint_url;
-                user.endpoint_port = req.body.endpoint_port;
-                return done(null, user);
-            } else if (user) {
-                return done(null, false, {
-                    message: JSON.stringify(user)
-                });
-            }
-            else {
-                return done(null, false, {
-                    message: 'Invalid credentials'
-                });
-            }
-
-        });
-
-
-
+        )
     }
 ));
+
 passport.serializeUser(function (user, done) {
     done(null, user);
 });

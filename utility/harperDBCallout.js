@@ -13,7 +13,6 @@ function callHarperDB(call_object,operation,  callback){
             "content-type": "application/json",
             "authorization": "Basic " + new Buffer(call_object.username + ':' + call_object.password).toString('base64'),
             "cache-control": "no-cache"
-
         }
     };
 
