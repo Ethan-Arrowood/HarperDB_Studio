@@ -6,6 +6,9 @@
   "scripts": {
     "test": "mocha"
   },
+  "engines": {
+    "node": ">=8.11.0"
+  },
   "author": "",
   "license": "ISC",
   "dependencies": {
