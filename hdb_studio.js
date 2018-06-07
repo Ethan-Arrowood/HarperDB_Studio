@@ -116,9 +116,23 @@ passport.deserializeUser(function (user, done) {
     done(null, user);
 });
 
+function checkNodeVersion() {
+    const version = process.version;
+
+    const pattern = new RegExp('v(\\d*)\\.(\\d*)\\.(\\d*)');
+    const match = version.match(pattern);
+
+    if ( match[1] < 8 && match[2] < 11 ) {
+        console.warn('We detect you are using an old version of Node.js \n Update to at least v8.11.* in order to use HarperDB Studio properly.');
+    }
+}
+
 runServer();
 
 function runServer() {
+
+    checkNodeVersion()
+
     let http_port = config.http_port;
     if (!http_port && !config.https_port) {
         http_port = DEFAULT_HTTP_PORT;
