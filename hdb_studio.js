@@ -119,7 +119,7 @@ passport.deserializeUser(function (user, done) {
 runServer();
 
 function runServer() {
-    if (true || process.version >= 'v8.11.0') {
+    if (process.version >= 'v8.11.0') {
         let http_port = config.http_port;
         if (!http_port && !config.https_port) {
             http_port = DEFAULT_HTTP_PORT;

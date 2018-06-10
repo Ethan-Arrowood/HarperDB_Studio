@@ -2,8 +2,18 @@
 
 const { HarperDBConnect } = require('harperdb-connect');
 
-async function callHarperDB(call_object, operation, callback){
+async function callHarperDB(call_object, operation, callback) {
     const db = new HarperDBConnect();
+
+    const func = this;
+
+    if (callback === undefined) {
+        return new Promise(function (resolve, reject) {
+            func(call_object, operation, function (err, result) {
+                err ? reject(err) : resolve(result);
+            });
+        });
+    }
     
     try {
         db.setAuthorization(call_object.username, call_object.password)
@@ -29,9 +39,9 @@ async function callHarperDB(call_object, operation, callback){
 
         let res = await db.request(operation, true);
 
-        callback(null, res);
+        return callback(null, res);
     } catch (err) {
-        callback(err, null);
+        return callback(err, null);
     }
 }
 

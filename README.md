@@ -27,3 +27,17 @@ To change any of these settings edit the file /config/config.json. A sample conf
 
 ## Run
 Launching the HarperDB studio is easy execute the command `node hdb_studio.js`
+
+## Documentation
+
+This part of the README includes basic guidlines for different aspects of the studio. If you update a module make sure to document it for other developers.
+
+### callHarperDB(call_object, operation, callback)
+
+This method can be found in [`utility/harperDBCallout.js`](./utility/harperDBCallout.js). It utilizes [`harperdb-connect`](https://github.com/Ethan-Arrowood/harperdb-connect) under the hood.
+
+Use it make requests to the HarperDB instance. 
+
+The `callback` parameter is optional. If no `callback` function is defined this method will return a promise that resolves the request to the database.
+
+Main authors for this module are [@Ethan-Arrowood](https://github.com/Ethan-Arrowood) and [@elipalmer](https://github.com/elipalmer)
