@@ -18,13 +18,13 @@ router.get('/', isAuthenticated, function (req, res) {
 
     };
 
-    hdb_callout.callHarperDB(call_object, operation, function (err, users) {
+    hdb_callout.callHarperDB(call_object, operation).then(users => {
         // console.error(err);
         // console.log(logs);
         return res.render('security', {
             user: req.user,
             users: JSON.stringify(users),
-            error: err,
+            error: err || null,
             nameOfUser: req.user.username
         });
     });
@@ -72,13 +72,9 @@ router.post('/update_user', isAuthenticated, function (req, res) {
 
     };
 
-    hdb_callout.callHarperDB(call_object, operation, function (err, success) {
-        if (err) {
-            return res.status(400).send(err);
-        }
-        return res.status(200).send(success);
-
-    });
+    hdb_callout.callHarperDB(call_object, operation)
+        .then(success => res.status(200).send(success))
+        .catch(err => res.status(400).send(err))
 
 });
 
@@ -94,7 +90,7 @@ router.get('/add_role', isAuthenticated, function (req, res) {
         operation: "describe_all"
     }
 
-    hdb_callout.callHarperDB(call_object, operation, function (err, result) {
+    hdb_callout.callHarperDB(call_object, operation).then(result => {
         res.render('add_role', {
             schemas: result,
             flatenSchema: JSON.stringify(mapObject(result)),
@@ -114,13 +110,9 @@ router.post('/add_role', isAuthenticated, function (req, res) {
         endpoint_port: req.user.endpoint_port
 
     };
-    hdb_callout.callHarperDB(call_object, JSON.parse(req.body.operationAddRole), function (err, result) {
-        if (err) {
-            return res.status(400).send(result);
-        }
-
-        return res.status(200).send(result);
-    });
+    hdb_callout.callHarperDB(call_object, JSON.parse(req.body.operationAddRole))
+        .then(result => res.status(200).send(result))
+        .catch(err => res.status(400).send(err))
 });
 
 router.post('/alter_role', isAuthenticated, function (req, res) {
@@ -131,13 +123,9 @@ router.post('/alter_role', isAuthenticated, function (req, res) {
         endpoint_port: req.user.endpoint_port
 
     };
-    hdb_callout.callHarperDB(call_object, JSON.parse(req.body.operationEditRole), function (err, result) {
-        if (err) {
-            return res.status(400).send(result);
-        }
-
-        return res.status(200).send(result);
-    });
+    hdb_callout.callHarperDB(call_object, JSON.parse(req.body.operationEditRole))
+        .then(result => res.status(200).send(result))
+        .catch(err => res.status(400).send(err))
 });
 
 router.get('/add_user', isAuthenticated, function (req, res) {
@@ -177,13 +165,9 @@ router.post('/getalluser', isAuthenticated, function (req, res) {
     var operation = {
         "operation": "list_users"
     }
-    hdb_callout.callHarperDB(connection, operation, function (err, user) {
-        if (err) {
-            return res.status(400).send(user);
-        }
-
-        return res.status(200).send(user);
-    });
+    hdb_callout.callHarperDB(connection, operation)
+        .then(user => res.status(200).send(user))
+        .catch(err => res.status(400).send(err))
 });
 
 router.post('/getallrole', isAuthenticated, function (req, res) {
@@ -197,13 +181,9 @@ router.post('/getallrole', isAuthenticated, function (req, res) {
     var operation = {
         "operation": "list_roles"
     }
-    hdb_callout.callHarperDB(connection, operation, function (err, roles) {
-        if (err) {
-            return res.status(400).send(err);
-        }
-
-        return res.status(200).send(roles);
-    });
+    hdb_callout.callHarperDB(connection, operation)
+        .then(roles => res.status(200).send(roles))
+        .catch(err => res.status(400).send(err))
 });
 
 router.post('/add_user', isAuthenticated, function (req, res) {
@@ -223,13 +203,9 @@ router.post('/add_user', isAuthenticated, function (req, res) {
 
     }
 
-    hdb_callout.callHarperDB(connection, operation, function (err, message) {
-        if (err) {
-            return res.status(400).send(message);
-        }
-
-        return res.status(200).send(message);
-    });
+    hdb_callout.callHarperDB(connection, operation)
+        .then(message => res.status(200).send(message))
+        .catch(err => res.status(400).send(err))
 });
 
 router.post('/drop_user', isAuthenticated, function (req, res) {
@@ -245,13 +221,9 @@ router.post('/drop_user', isAuthenticated, function (req, res) {
         username: req.body.username
     }
 
-    hdb_callout.callHarperDB(connection, operation, function (err, message) {
-        if (err) {
-            return res.status(400).send(err);
-        }
-
-        return res.status(200).send(message);
-    });
+    hdb_callout.callHarperDB(connection, operation)
+        .then(message => res.status(200).send(message))
+        .catch(err => res.status(400).send(err))
 });
 
 router.post('/drop_role', isAuthenticated, function (req, res) {
@@ -268,13 +240,9 @@ router.post('/drop_role', isAuthenticated, function (req, res) {
         id: req.body.roleId
     }
 
-    hdb_callout.callHarperDB(connection, operation, function (err, message) {
-        if (err) {
-            return res.status(400).send(message);
-        }
-
-        return res.status(200).send(message);
-    });
+    hdb_callout.callHarperDB(connection, operation)
+        .then(message => res.status(200).send(message))
+        .catch(err => res.status(400).send(err))
 })
 
 var getListRole = (req, res) => {
@@ -289,17 +257,14 @@ var getListRole = (req, res) => {
         var operation = {
             "operation": "list_roles"
         }
-        hdb_callout.callHarperDB(connection, operation, function (err, roles) {
-            if (err) {
-                return resolve(err);
-            }
-            return resolve(roles);
-        });
+        hdb_callout.callHarperDB(connection, operation)
+        .then(roles => res.status(200).send(roles))
+        .catch(err => res.status(400).send(err))
     });
 }
 
 var getSchemaAll = (req, res) => {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
         var connection = {
             username: req.user.username,
             password: req.user.password,
@@ -310,12 +275,9 @@ var getSchemaAll = (req, res) => {
         var operation = {
             "operation": "describe_all"
         }
-        hdb_callout.callHarperDB(connection, operation, function (err, schemas) {
-            if (err) {
-                return resolve(schemas);
-            }
-            return resolve(schemas);
-        });
+        hdb_callout.callHarperDB(connection, operation)
+            .then(schemas => resolve(schemas))
+            .catch(err => reject(err))
     });
 }
 

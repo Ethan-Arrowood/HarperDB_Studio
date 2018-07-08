@@ -25,17 +25,15 @@ var setFavorites = function (req, res, favoriteObj) {
             table: 'query',
             records: [record]
         };
-        hdb_callout.callHarperDB(call_object, operation, function (err, result) {
-            if (err || result.error) {
+        hdb_callout.callHarperDB(call_object, operation)
+            .then(result => resolve(result))
+            .catch(err => {
                 createUserFavoriteTable(req, res).then(() => {
-                    hdb_callout.callHarperDB(call_object, operation, function (err2, result2) {
-                        resolve(result2);
-                    });
-
+                    hdb_callout.callHarperDB(call_object, operation)
+                        .then(result2 => resolve(result2))
+                        .catch(err2 => reject(err2))
                 })
-            }
-            resolve(result);
-        });
+            })
     })
 }
 
@@ -69,17 +67,15 @@ var setLiveLink = function (req, en_url, id) {
             table: 'livelink',
             records: [record]
         };
-        hdb_callout.callHarperDB(call_object, operation, function (err, result) {
-            if (err || result.error) {
+        hdb_callout.callHarperDB(call_object, operation)
+            .then(result => resolve(result))
+            .catch(err => {
                 createLivelinkTable(req).then(() => {
-                    hdb_callout.callHarperDB(call_object, operation, function (err2, result2) {
-                        resolve(result2);
-                    });
-
+                    hdb_callout.callHarperDB(call_object, operation)
+                        .then(result2 => resolve(result2))
+                        .catch(err2 => reject(err2))
                 })
-            } else
-                resolve(result);
-        });
+            })
     })
 }
 
@@ -111,9 +107,9 @@ var updateLiveLink = function (req, id) {
             table: 'livelink',
             records: [record]
         };
-        hdb_callout.callHarperDB(call_object, operation, function (err, result) {
-            resolve(result);
-        });
+        hdb_callout.callHarperDB(call_object, operation)
+            .then(result => resolve(result))
+            .catch(err => reject(err))
     })
 }
 
@@ -131,19 +127,15 @@ var getFavorites = function (req, res) {
             sql: "SELECT * FROM harperdb_studio.query WHERE username = '" + req.user.username + "' ORDER BY date DESC  LIMIT 10"
         };
 
-        hdb_callout.callHarperDB(call_object, operation, function (err, result) {
-            if (err || result.error) {
-                createUserFavoriteTable(req, res).then(() => {
-                    hdb_callout.callHarperDB(call_object, operation, function (err2, result2) {
-                        resolve(result2);
-                    });
+        hdb_callout.callHarperDB(call_object, operation)
+            .then(result => resolve(result))
+            .catch(err => {
+                createLivelinkTable(req).then(() => {
+                    hdb_callout.callHarperDB(call_object, operation)
+                        .then(result2 => resolve(result2))
+                        .catch(err2 => reject(err2))
                 })
-
-            } else {
-                resolve(result);
-            }
-
-        });
+            })
     })
 
 }
@@ -162,22 +154,15 @@ var getLivelink = function (req) {
             sql: "SELECT * FROM harperdb_studio.livelink WHERE username = '" + req.user.username + "' ORDER BY date DESC  LIMIT 10"
         };
 
-        hdb_callout.callHarperDB(call_object, operation, function (err, result) {
-            if (err || result.error) {
-                console.log(err)
-
+        hdb_callout.callHarperDB(call_object, operation)
+            .then(result => resolve(result))
+            .catch(err => {
                 createLivelinkTable(req).then(() => {
-
-                    hdb_callout.callHarperDB(call_object, operation, function (err2, result2) {
-                        resolve(result2);
-                    });
+                    hdb_callout.callHarperDB(call_object, operation)
+                        .then(result2 => resolve(result2))
+                        .catch(err2 => reject(err2))
                 })
-
-            } else {
-                resolve(result);
-            }
-
-        });
+            })
     })
 
 }
@@ -195,15 +180,12 @@ var getLivelinkById = function (req, id) {
             operation: 'sql',
             sql: "SELECT * FROM harperdb_studio.livelink WHERE id = '" + id + "'"
         };
-        hdb_callout.callHarperDB(call_object, operation, function (err, result) {
-            if (err || result.error)
-                resolve(result);
-            else if (result.length > 0)
-                resolve(result[0])
-            else
-                resolve(result)
-
-        });
+        hdb_callout.callHarperDB(call_object, operation)
+            .then(result => {
+                if (result.length > 0) resolve(result[0])
+                else resolve(result)
+            })
+            .catch(err => reject(err))
     });
 }
 
@@ -226,12 +208,9 @@ var createUserFavoriteTable = function (req, res) {
 
         };
         createFavoriteSearchSchema(req, res).then(() => {
-            hdb_callout.callHarperDB(call_object, operation, function (err, result) {
-                if (err || result.error) {
-                    resolve(result);
-                }
-                resolve(result);
-            });
+            hdb_callout.callHarperDB(call_object, operation)
+                .then(result => resolve(result))
+                .catch(err => reject(err))
         })
 
 
@@ -256,12 +235,9 @@ var createLivelinkTable = function (req) {
 
         };
         createFavoriteSearchSchema(req).then(() => {
-            hdb_callout.callHarperDB(call_object, operation, function (err, result) {
-                if (err || result.error) {
-                    resolve(result);
-                }
-                resolve(result);
-            });
+            hdb_callout.callHarperDB(call_object, operation)
+                .then(result => resolve(result))
+                .catch(err => reject(err))
         })
 
 
@@ -283,13 +259,9 @@ var createFavoriteSearchSchema = function (req) {
             schema: 'harperdb_studio'
         };
 
-        hdb_callout.callHarperDB(call_object, operation, function (err, result) {
-            if (err || result.error) {
-                resolve(err);
-
-            }
-            resolve(result);
-        });
+        hdb_callout.callHarperDB(call_object, operation)
+            .then(result => resolve(result))
+            .catch(err => reject(err))
     })
 
 }

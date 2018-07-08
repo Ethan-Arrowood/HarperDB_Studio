@@ -28,7 +28,7 @@ router.get('/', function (req, res) {
 
     };
 
-    hdb_callout.callHarperDB(call_object, operation, function (err, logs) {
+    hdb_callout.callHarperDB(call_object, operation).then(logs => {
 
         return res.render('logs', {
             user: req.user,
@@ -48,16 +48,13 @@ router.post('/search', isAuthenticated, function (req, res) {
         endpoint_url: req.user.endpoint_url,
         endpoint_port: req.user.endpoint_port
     };
-    
-    hdb_callout.callHarperDB(connection, JSON.parse(req.body.operation), function (err, result) {
-        if (err) {
-            return res.status(400).send(result);
-        }
+
+    hdb_callout.callHarperDB(connection, JSON.parse(req.body.operation)).then(result => {
         var obj = {
             result: mapDynamicToStableObject(reduceTypeLogs(result))
         }        
         return res.status(200).send(obj);
-    });
+    }).catch(err => res.status(400).send(result));
 
 })
 

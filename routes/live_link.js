@@ -58,9 +58,7 @@ router.put('/unfavorite/:id/:isFavorited', isAuthenticated, function (req, res) 
 
     }
 
-    hdb_callout.callHarperDB(call_object, operation, function (error, result) {        
-        return res.status(200).send(result);
-    })
+    hdb_callout.callHarperDB(call_object, operation).then(result => res.status(200).send(result))
 
 })
 
@@ -82,14 +80,14 @@ router.get('/public/:key', function (req, res) {
             sql: "SELECT * FROM harperdb_studio.livelink WHERE id ='" + decryptedObject.id + "' "
         };
 
-        hdb_callout.callHarperDB(call_object, operation, function (error, sqlLivelink) {
+        hdb_callout.callHarperDB(call_object, operation).then(sqlLivelink => {
             if (sqlLivelink.length > 0) {
                 var operation2 = {
                     operation: 'sql',
                     sql: sqlLivelink[0].sql
                 }
 
-                hdb_callout.callHarperDB(call_object, operation2, function (error2, sqlData) {
+                hdb_callout.callHarperDB(call_object, operation2).then(sqlData => {
                     res.render('live_link', {
                         graphDetail: JSON.stringify({
                             data: sqlData,
@@ -131,13 +129,7 @@ router.get('/delete/:id', isAuthenticated, function (req, res) {
         "hash_values": [req.params.id]
 
     }
-    hdb_callout.callHarperDB(call_object, operation, function (error, result) {
-        return res.status(200).send(result);
-
-
-    });
-
-
+    hdb_callout.callHarperDB(call_object, operation).then(result => res.status(200).send(result))
 })
 
 var encryptLivelink = (req, id) => {

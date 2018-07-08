@@ -32,24 +32,21 @@ router.get('/sql_search', isAuthenticated, function (req, res) {
         operation: 'describe_all'
     };
 
-    hdb_callout.callHarperDB(call_object, operation, function (err, result) {
-        if (err || result.error) {
-            console.log(err);
-            return err;
-        }
-
-        var keywords = reduceDescribeAllObject(result);
-        res.render('sql_search', {
-            keywords: JSON.stringify(keywords),
-            schemas: sortSchemas(result),
-            nameOfUser: req.user.username,
-            breadcrumb: {
-                name: req.session.cur_url_name,
-                path: req.session.cur_url_path
-            }
-        });
-    });
-
+    hdb_callout.callHarperDB(call_object, operation).then(result => {
+            var keywords = reduceDescribeAllObject(result);
+            res.render('sql_search', {
+                keywords: JSON.stringify(keywords),
+                schemas: sortSchemas(result),
+                nameOfUser: req.user.username,
+                breadcrumb: {
+                    name: req.session.cur_url_name,
+                    path: req.session.cur_url_path
+                }
+            });
+        }).catch(err => {
+            console.log(err)
+            return err
+        })
 });
 
 router.get('/sql_search_edit/:livelinkId', isAuthenticated, function (req, res) {
@@ -64,12 +61,8 @@ router.get('/sql_search_edit/:livelinkId', isAuthenticated, function (req, res) 
         operation: 'describe_all'
     };
 
-    favorite.getLivelinkById(req, req.params.livelinkId).then(resObj => {        
-        hdb_callout.callHarperDB(call_object, operation, function (err, result) {
-            if (err || result.error) {
-                console.log(err);
-                return err;
-            }
+    favorite.getLivelinkById(req, req.params.livelinkId).then(resObj => {
+        hdb_callout.callHarperDB(call_object, operation).then(result => {
             var keywords = reduceDescribeAllObject(result);
             res.render('sql_search', {
                 keywords: JSON.stringify(keywords),
@@ -81,6 +74,9 @@ router.get('/sql_search_edit/:livelinkId', isAuthenticated, function (req, res) 
                 },
                 livelinkObject: JSON.stringify(resObj)
             });
+        }).catch(err => {
+            console.log(err);
+            return err;
         });
     }).catch(err => {
         return res.status(200).send(err);
@@ -102,11 +98,10 @@ router.get('/sql_search/:sqllink', isAuthenticated, function (req, res) {
         operation: 'describe_all'
     };
 
-    hdb_callout.callHarperDB(call_object, operation, function (err, result) {
-        if (err || result.error) {
-            console.log(err);
-            return err;
-        }
+
+
+    hdb_callout.callHarperDB(call_object, operation).then(result => {
+
         var keywords = reduceDescribeAllObject(result);
         res.render('sql_search', {
             keywords: JSON.stringify(keywords),
@@ -114,6 +109,9 @@ router.get('/sql_search/:sqllink', isAuthenticated, function (req, res) {
             sqlLink: Buffer.from(req.params.sqllink, 'base64').toString(),
             nameOfUser: req.user.username
         });
+    }).catch(err => {
+        console.log(err);
+        return err;
     });
 
 });
@@ -131,15 +129,14 @@ router.get('/filter_search', isAuthenticated, function (req, res) {
         operation: 'describe_all'
     };
 
-    hdb_callout.callHarperDB(call_object, operation, function (err, result) {
-        if (err || result.error) {
-            console.log(err);
-            return err;
-        }
+    hdb_callout.callHarperDB(call_object, operation).then(result => {
         res.render('filter_search', {
             schemas: JSON.stringify(sortSchemas(result)),
             nameOfUser: req.user.username
         });
+    }).catch(err => {
+        console.log(err);
+        return err;
     });
 
 });
@@ -156,16 +153,16 @@ router.post('/filter_search', isAuthenticated, function (req, res) {
         operation: 'sql',
         sql: req.body.sql
     };
-    hdb_callout.callHarperDB(connection, operation, function (err, result) {
-        if (err) {
-            return res.status(400).send(err);
-        }
+    hdb_callout.callHarperDB(connection, operation).then(result => {
+
         var obj = {
             result: mapDynamicToStableObject(result),
             sql: req.body.sql
         }
 
         return res.status(200).send(obj);
+    }).catch(err => {
+        return res.status(400).send(err);
     });
 
 })
