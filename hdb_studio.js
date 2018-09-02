@@ -82,53 +82,40 @@ passport.use(
       passReqToCallback: true
     },
     function(req, username, password, done) {
-      var call_object = {
+      const call_object = {
         username: username,
         password: password,
         endpoint_url: req.body.endpoint_url,
         endpoint_port: req.body.endpoint_port
       };
 
-      var operation = {
+      const operation = {
         operation: "user_info"
       };
-      hdb_callout.callHarperDB(call_object, operation, function(
-        err,
-        user,
-        statusCode
-      ) {
-        if (err) {
-          return done(null, false, {
-            message: err
-          });
-        }
 
-        if (user && user.active) {
-          user.password = password;
-          user.endpoint_url = req.body.endpoint_url;
-          user.endpoint_port = req.body.endpoint_port;
-          user.super_admin = true;
+      hdb_callout
+        .callHarperDB(call_object, operation)
+        .then(response => {
+          let user = {
+            endpoint_url: req.body.endpoint_url,
+            endpoint_port: req.body.endpoint_port
+          };
+
+          if (response.error && response.statusCode === 403) {
+            user = { ...user, username, password, super_user: false };
+          } else if (response.active) {
+            user = { ...user, ...response, password, super_user: true };
+          } else {
+            throw new Error("Invalid credentials");
+          }
+
           return done(null, user);
-        } else if (statusCode == 403) {
-          user.username = username;
-          user.password = password;
-          user.endpoint_url = req.body.endpoint_url;
-          user.endpoint_port = req.body.endpoint_port;
-          user.super_admin = false;
-          return done(null, user);
-        } else if (user) {
-          return done(null, false, {
-            message: JSON.stringify(user)
-          });
-        } else {
-          return done(null, false, {
-            message: "Invalid credentials"
-          });
-        }
-      });
+        })
+        .catch(err => done(null, false, { message: err.message }));
     }
   )
 );
+
 passport.serializeUser(function(user, done) {
   done(null, user);
 });
